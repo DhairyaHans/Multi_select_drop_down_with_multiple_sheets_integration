@@ -38,6 +38,9 @@ In the following code, We need to create these major functionalities ->
     - While using Excel, We may have the case, where, We have data already present, and we need to add the functionality of multi-select dropdown to the sheet.
     - Running this macro file, updates/creates the drop-down list in the column B, based on the existing values present in the cells of column A.
 
+  # basic_code_for_multi_select_from_a_specific_cell ->
+    - Just a basic code file that gets comma-separated value from a column and create a drop-down list in another cell.
+
 # IMPORTANT NOTE -> 
   - **worksheet_change_for_drop_down_list_sheet** and **worksheet_change_for_source_sheet** files, are important for handling the updates that will be happening in the file columns.
   - **update_drop_down_lists** file,is important for handling the drop-down list for existing values in the columns.
