@@ -1,0 +1,113 @@
+Private Sub Worksheet_Change(ByVal Target As Range)
+    MsgBox "Sheet 4 Update"
+    Dim sourceColumn As Range
+    Dim targetColumn As Range
+    Dim sourceMatching As Range
+    Dim targetMatching As Range
+    Dim changedCells As Range
+    Dim Sheet5ChangedCells As Range
+    Dim cell As Range
+    Dim matchingRows As Range
+    Dim values() As String
+    Dim validationList As String
+    Dim i As Integer
+    Dim oldValue As String
+    Dim newValue As String
+    Dim nV As Variant
+    Dim oV As Variant
+    Dim cellValue As Variant
+    Dim textCell As Variant
+    
+    
+    Sheet4.Unprotect ' Unprotect the worksheet when it is deactivated
+    Sheet5.Unprotect
+    
+    MsgBox "Unprotect"
+    
+    ' Define the range for the source column containing Source names for matching
+    Set sourceMatching = Sheet4.Range("B3:B" & Sheet4.Cells(Sheet4.Rows.Count, "B").End(xlUp).Row)
+    
+    ' Define the range for the target column containing Target names for matching
+    Set targetMatching = Sheet5.Range("A3:A" & Sheet5.Cells(Sheet5.Rows.Count, "A").End(xlUp).Row)
+    
+    
+    MsgBox "Source Match - " & sourceMatching.Address
+    MsgBox "Target Match - " & targetMatching.Address
+
+    
+    ' Define the range for the source column containing comma-separated values
+    Set sourceColumn = Sheet4.Range("H3:H" & Sheet4.Cells(Sheet4.Rows.Count, "H").End(xlUp).Row)
+    
+    ' Define the range for the target column where drop-down lists will be created
+    Set targetColumn = Sheet5.Range("C3:C" & Sheet5.Cells(Sheet5.Rows.Count, "C").End(xlUp).Row)
+    
+        
+    
+    MsgBox "Source Col - " & sourceColumn.Address
+    MsgBox "Target Col - " & targetColumn.Address
+    
+    
+    ' Code for Handling the updates in comma-separated Values for drop-down list
+    
+    ' Check if the changed cells are in the source column
+    MsgBox "Target - " & Target.Address & Target.Worksheet.Name
+    
+    Set changedCells = Application.Intersect(Target, sourceColumn)
+    
+    If Not changedCells Is Nothing Then
+        ' Loop through each changed cell in the source column
+        MsgBox "Changed - " & changedCells.Address
+        
+        For Each cell In changedCells
+            MsgBox "Cell Updated - " & cell.Address
+            If cell.value <> "" Then
+                textCell = Cells(cell.Row, "B").value
+                MsgBox "Text Cell - " & textCell & " " & cell.value & " " & cell.Row
+                
+                For Each targetCell In targetMatching
+                    Application.EnableEvents = False
+                    MsgBox "Target Cell -> " & targetCell.value & " " & targetCell.Row
+                    If targetCell.value = textCell Then
+                        ' Get the comma-separated values from the changed cell
+                
+                        values = SplitValuesToList(cell.value)
+            
+                        ' Generate the validation list string with checkboxes
+                        validationList = Join(values, ",") ' Join values with comma
+                        
+                        ' Generate the validation list string
+                        validationList = ""
+                        For i = LBound(values) To UBound(values)
+                            validationList = validationList & values(i) & ","
+                        Next i
+                        validationList = Left(validationList, Len(validationList) - 1) ' Remove the trailing comma
+                        
+                        MsgBox "Cell " & cell.Row & "Val " & cell.value
+                        
+                        MsgBox "Validation - " & validationList
+                        
+                        ' Set up data validation for the corresponding cell in the target column
+                        With targetColumn.Cells(targetCell.Row - 2)
+                            .Validation.Delete
+                            .Validation.Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=validationList
+                            .Validation.IgnoreBlank = True
+                            .Validation.InCellDropdown = True
+                            .Validation.ShowInput = True ' Show input message
+                            .Validation.InputTitle = "Select Value" ' Input message title
+                            .Validation.InputMessage = "Please select a value from the list." ' Input message text
+                            .Validation.ShowError = True ' Show error message
+                            .Validation.ErrorTitle = "Invalid Entry" ' Error message title
+                            .Validation.ErrorMessage = "You must select a valid value from the list." ' Error message text
+                        End With
+                    End If
+                    Application.EnableEvents = True
+                Next targetCell
+            End If
+        Next cell
+    End If
+    
+    
+    Sheet5.Protect
+    Sheet4.Protect ' Protect the worksheet when it is activated
+End Sub
+
