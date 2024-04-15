@@ -1,0 +1,147 @@
+Private Sub Worksheet_Change(ByVal Target As Range)
+    MsgBox "Sheet 5 Update"
+    Dim sourceColumn As Range
+    Dim targetColumn As Range
+    Dim sourceMatching As Range
+    Dim targetMatching As Range
+    Dim changedCells As Range
+    Dim matchingRow As Range
+    Dim cell As Range
+    Dim values() As String
+    Dim validationList As String
+    Dim i As Integer
+    Dim oldValue As String
+    Dim newValue As String
+    Dim nV As Variant
+    Dim oV As Variant
+    Dim cellValue As Variant
+    
+    Sheet5.Unprotect ' Unprotect the worksheet when it is deactivated
+    
+    MsgBox "Unprotect"
+    
+    ' Define the range for the source column containing Source names for matching
+    Set sourceMatching = Sheet4.Range("B3:B" & Sheet4.Cells(Sheet4.Rows.Count, "B").End(xlUp).Row)
+    
+    ' Define the range for the target column containing Target names for matching
+    Set targetMatching = Sheet5.Range("A3:A" & Sheet5.Cells(Sheet5.Rows.Count, "A").End(xlUp).Row)
+    
+    
+    MsgBox "Source Match - " & sourceMatching.Address
+    MsgBox "Target Match - " & targetMatching.Address
+
+    
+    ' Define the range for the source column containing comma-separated values
+    Set sourceColumn = Sheet4.Range("H3:H" & Sheet4.Cells(Sheet4.Rows.Count, "H").End(xlUp).Row)
+    
+    ' Define the range for the target column where drop-down lists will be created
+    Set targetColumn = Sheet5.Range("C3:C" & Sheet5.Cells(Sheet5.Rows.Count, "C").End(xlUp).Row)
+    
+            
+    
+    MsgBox "Source Col - " & sourceColumn.Address
+    MsgBox "Target Col - " & targetColumn.Address
+    
+    ' Code for Handling the updates in comma-separated Values for drop-down list
+    
+    ' Check if the changed cells are in the source column
+    MsgBox "Target - " & Target.Address & Target.Worksheet.Name
+    
+    ' Code for handling the Multi-Select Drop Down
+    ' Check if the changed cells are in the target column
+    ' If Target.Worksheet.Name = "Sheet4" Then
+      '   Set Sheet5ChangedCells = Application.Intersect(Target, targetColumn.Parent.Range(targetColumn.Address))
+    ' End If
+    
+    Set changedCells = Application.Intersect(Target, targetMatching)
+    If Not changedCells Is Nothing Then
+        For Each cell In changedCells
+            Application.EnableEvents = False
+            Set matchingRow = sourceMatching.Find(What:=cell.value, LookIn:=xlValues, LookAt:=xlWhole)
+            
+            If Not matchingRow Is Nothing Then
+                MsgBox "Matching Row" & matchingRow & matchingRow.Row
+                cellValue = Sheet4.Cells(matchingRow.Row, "H").value
+                MsgBox "Cell Value to be used" & cellValue
+                If cellValue <> "" Then
+                    ' Get the comma-separated values from the changed cell
+            
+                    values = SplitValuesToList(cellValue)
+        
+                    ' Generate the validation list string with checkboxes
+                    validationList = Join(values, ",") ' Join values with comma
+                    
+                    ' Generate the validation list string
+                    validationList = ""
+                    For i = LBound(values) To UBound(values)
+                        validationList = validationList & values(i) & ","
+                    Next i
+                    validationList = Left(validationList, Len(validationList) - 1) ' Remove the trailing comma
+                    
+                    MsgBox "Cell " & cell.Row & "Val " & cell.value
+                    
+                    MsgBox "Validation - " & validationList
+                    
+                    ' Set up data validation for the corresponding cell in the target column
+                    With targetColumn.Cells(cell.Row - 2)
+                        .Validation.Delete
+                        .Validation.Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=validationList
+                        .Validation.IgnoreBlank = True
+                        .Validation.InCellDropdown = True
+                        .Validation.ShowInput = True ' Show input message
+                        .Validation.InputTitle = "Select Value" ' Input message title
+                        .Validation.InputMessage = "Please select a value from the list." ' Input message text
+                        .Validation.ShowError = True ' Show error message
+                        .Validation.ErrorTitle = "Invalid Entry" ' Error message title
+                        .Validation.ErrorMessage = "You must select a valid value from the list." ' Error message text
+                    End With
+                    
+                End If
+                
+            End If
+            Application.EnableEvents = True
+        Next cell
+    End If
+    
+    Set changedCells = Application.Intersect(Target, targetColumn)
+
+    
+    If Not changedCells Is Nothing Then
+        ' Loop through each changed cell in the target column
+        For Each cell In changedCells
+            
+            Application.EnableEvents = False
+            ' Get the previous value of the cell from the dictionary
+            newValue = cell.value
+            Application.Undo
+            oldValue = cell.value
+            
+            ' Display the Message Box
+            MsgBox "Previous Value: " & oldValue & vbNewLine & "New Value: " & newValue
+            
+            ' Logic handling the Drop-down Values
+            If newValue = "Clear" Then
+                Target.value = ""
+            Else
+                If oldValue = "" Then
+                    Target.value = newValue
+                Else
+                    
+                    If InStr(1, oldValue, newValue) = 0 Then
+                        Target.value = oldValue & ", " & newValue
+                    Else
+                        Target.value = oldValue
+                    End If
+                End If
+            End If
+            
+            Application.EnableEvents = True
+            
+        Next cell
+    End If
+    
+    Sheet5.Protect ' Protect the worksheet when it is activated
+ExitSub:
+    Application.EnableEvents = True
+End Sub
+
