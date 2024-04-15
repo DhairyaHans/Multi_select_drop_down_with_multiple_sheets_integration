@@ -1,0 +1,25 @@
+Function SplitValuesToList(ByVal inputString As String) As Variant
+
+ ' Remove leading commas
+    While Left(inputString, 1) = ","
+        inputString = Mid(inputString, 2)
+    Wend
+    
+    ' Remove trailing commas
+    While Right(inputString, 1) = ","
+        inputString = Left(inputString, Len(inputString) - 1)
+    Wend
+    
+    If inputString = "" Then
+        inputString = ","
+    End If
+    
+    If inputString <> "," Then
+        inputString = inputString & ",Clear"
+    End If
+    SplitValuesToList = Split(inputString, ";")
+
+End Function
+
+
+
