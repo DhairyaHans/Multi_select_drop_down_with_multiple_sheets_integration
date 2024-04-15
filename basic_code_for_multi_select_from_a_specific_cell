@@ -1,0 +1,26 @@
+Sub UpdateDropDownList()
+    Dim cell As Range
+    Dim values() As String
+    Dim validationList As String
+    Dim i As Integer
+    
+    ' Get the comma-separated values from cell C5
+    values = SplitValuesToList(Sheet12.Range("C5"))
+    
+    ' Generate the validation list string
+    For i = LBound(values) To UBound(values)
+        validationList = validationList & values(i) & ","
+    Next i
+    validationList = Left(validationList, Len(validationList) - 1) ' Remove the trailing comma
+    
+    ' Clear existing data validation in target cell
+    Sheet12.Range("B1").Validation.Delete
+    
+    ' Set up data validation for the target cell
+    With Sheet12.Range("B1").Validation
+        .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=validationList
+        .IgnoreBlank = True
+        .InCellDropdown = True
+    End With
+End Sub
+
